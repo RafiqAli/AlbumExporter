@@ -15,9 +15,16 @@ buildscript {
 allprojects {
     repositories {
         jcenter()
+
     }
 }
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+}
+
+
+
+repositories {
+    mavenCentral()
 }
