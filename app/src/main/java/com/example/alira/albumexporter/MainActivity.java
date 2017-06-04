@@ -15,11 +15,15 @@ import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
+import com.facebook.HttpMethod;
+import com.facebook.Profile;
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity {
@@ -34,18 +38,24 @@ public class MainActivity extends AppCompatActivity {
         LoginButton loginButton;
         callbackManager = CallbackManager.Factory.create();
 
+
+
         loginButton = (LoginButton) findViewById(R.id.login_button);
-        loginButton.setReadPermissions("public_profile", "email", "user_friends");
+        loginButton.setReadPermissions("public_profile", "email","user_photos");
 
+        if (Profile.getCurrentProfile() != null) {
 
+            Intent intent = new Intent(getApplicationContext(),WelcomeActivity.class);
+            startActivity(intent);
+        }
 
         // Callback registration
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
 
-                Log.i("success","Login Succeeded");
-
+                Intent intent = new Intent(getApplicationContext(),WelcomeActivity.class);
+                startActivity(intent);
             }
 
             @Override
