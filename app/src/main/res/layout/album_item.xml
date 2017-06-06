@@ -5,26 +5,28 @@
 
     <ImageView
         android:id="@+id/album_item_imageview"
-        android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:layout_margin="20dp"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_margin="10dp"
+        android:layout_gravity="center"
+        android:contentDescription="@string/album_item_imageview_content_description"
         />
 
     <TextView
         android:id="@+id/album_item_name"
         android:layout_width="150dp"
         android:layout_height="30dp"
-        android:text="Album Name"
+        android:text="@string/album_item_name"
         android:textColor="#000000"
-        android:textSize="20dp"
+        android:textSize="15sp"
         android:layout_gravity="center"/>
 
     <TextView
         android:id="@+id/album_item_count"
         android:layout_width="100dp"
         android:layout_height="20dp"
-        android:text="count"
-        android:textSize="15dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginLeft="10dp"/>
+        android:text="@string/album_item_count_photos"
+        android:textSize="15sp"
+        android:layout_marginTop="10dp"
+       />
 </LinearLayout>

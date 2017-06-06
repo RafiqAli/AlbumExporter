@@ -1,15 +1,8 @@
 package com.example.alira.albumexporter.models;
 
-/**
- * Created by alira on 5/30/2017.
- */
 
 import android.graphics.Bitmap;
-import android.media.Image;
 
-import com.facebook.*;
-
-import java.util.List;
 
 
 public class Album {
@@ -20,9 +13,7 @@ public class Album {
     private String cover_photo_id;
     private Bitmap cover_photo;
     private String countWrapper;
-    private List<Photo> photos;
 
-    public Album(){}
 
     public Album(String id)
     {
@@ -67,14 +58,6 @@ public class Album {
 
     public void setCountWrapper(String countWrapper) {
         this.countWrapper = countWrapper;
-    }
-
-    public List<Photo> getPhotos() {
-        return photos;
-    }
-
-    public void setPhotos(List<Photo> photos) {
-        this.photos = photos;
     }
 
     public String getCover_photo_id() {

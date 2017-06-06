@@ -2,13 +2,11 @@
 
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    >
-
-
+    android:layout_width="match_parent"
+   >
     <GridView
-        android:id="@+id/welcome_grid"
+        android:id="@+id/photos_grid"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_margin="5dp"
@@ -19,5 +17,6 @@
         android:stretchMode="columnWidth"
         android:verticalSpacing="5dp"
         android:focusable="true"
-        android:clickable="true"/>
+        android:clickable="true" />
+
 </LinearLayout>

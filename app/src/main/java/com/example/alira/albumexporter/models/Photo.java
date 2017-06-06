@@ -2,27 +2,22 @@ package com.example.alira.albumexporter.models;
 
 import android.graphics.Bitmap;
 
-/**
- * Created by alira on 5/30/2017.
- */
 
 public class Photo {
 
-    private int id;
+    private String id;
     private Bitmap source;
 
-    public Photo(){}
-
-    public Photo(int id)
+    public Photo(String id)
     {
         this.id = id;
     }
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -32,5 +27,13 @@ public class Photo {
 
     public void setSource(Bitmap source) {
         this.source = source;
+    }
+
+    @Override
+    public String toString() {
+        return "Photo{" +
+                "id='" + id + '\'' +
+                ", source=" + source +
+                '}';
     }
 }

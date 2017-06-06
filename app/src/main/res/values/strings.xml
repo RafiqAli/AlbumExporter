@@ -3,4 +3,9 @@
 
     <string name="facebook_app_id">138503260028991</string>
     <string name="fb_login_protocol_scheme">fb138503260028991</string>
+
+    <string name="album_item_name">Album Name</string>
+    <string name="album_item_count_photos">count</string>
+    <string name="album_item_imageview_content_description">description of the album photo</string>
+
 </resources>
