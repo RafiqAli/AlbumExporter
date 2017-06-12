@@ -10,11 +10,20 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
+
+import com.bumptech.glide.Glide;
+import com.example.alira.albumexporter.models.Album;
 import com.example.alira.albumexporter.models.Photo;
 import com.facebook.AccessToken;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.HttpMethod;
+import com.facebook.Profile;
+
 import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -33,6 +42,10 @@ public class PhotosActivity extends AppCompatActivity {
     List<Photo> photosList = new ArrayList<>();
     ProgressDialog progress;
     GridView photosGrid;
+    String after;
+    PhotosGridAdapter adapter = new PhotosGridAdapter(this,photosList);
+    String album_id;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,15 +60,97 @@ public class PhotosActivity extends AppCompatActivity {
 
         photosGrid = (GridView) findViewById(R.id.photos_grid);
 
+        photosGrid.setAdapter(adapter);
+
         Intent intent = getIntent();
-        String album_id   = intent.getExtras().getString("album_id");
-        //String album_name = intent.getExtras().getString("album_name");
+        album_id   = intent.getExtras().getString("album_id");
+        String album_name = intent.getExtras().getString("album_name");
+
+        Log.i("album-id-null",album_id);
+
+        setTitle(album_name);
 
         new PhotosIdsFetcher().execute(album_id);
+
+    }
+
+
+
+    public String getImageById(String photo_id)
+    {
+        Bitmap decodedImage = null;
+        String id = photo_id; // picture id
+        String protocol = "https://";
+        String host = "graph.facebook.com/v2.9/";
+        String access_token = AccessToken.getCurrentAccessToken().getToken();
+        String suffix = "/picture";
+        String type = "normal";
+        String Url = protocol + host + id + suffix + "?" + "access_token=" + access_token + "&" + "type=" + type;
+
+
+        return Url;
+    }
+
+    public void loadMoreContent()
+    {
+
+        Bundle params = new Bundle();
+
+        params.putInt("limit",25);
+        params.putString("after",after);
+
+        String path = album_id+"/photos";
+
+        Log.i("path-loadmore",path);
+
+        new GraphRequest(
+                AccessToken.getCurrentAccessToken(),
+                path,
+                params,
+                HttpMethod.GET,
+                new GraphRequest.Callback() {
+                    @Override
+                    public void onCompleted(GraphResponse response) {
+
+                        JSONObject jsonObject = response.getJSONObject();
+                        Log.i("response",response.getJSONObject().toString());
+
+                        try {
+
+                            after = jsonObject.getJSONObject("paging").getJSONObject("cursors").getString("after");
+
+                            ;
+
+                            JSONArray fetchedPhotosIds = jsonObject.getJSONArray("data");
+
+                            for (int i = 0; i < fetchedPhotosIds.length(); i++) {
+                                JSONObject item = fetchedPhotosIds.getJSONObject(i);
+                                Photo photo = new Photo(item.getString("id"));
+                                photosList.add(photo);
+
+                                Log.i("after-photo",photo.toString());
+
+                            }
+
+                            adapter.notifyDataSetChanged();
+
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+
+                            if(response.getError() != null) Log.i("error-graph",response.getError().toString());
+                        }
+
+                    }
+
+                }
+        ).executeAsync();
+
     }
 
     private class PhotosGridAdapter extends BaseAdapter {
         private Context context;
+        private final int LOAD_LIMIT = 25;
+        private  int identifer = 0;
 
         private List<Photo> photos;
         PhotosGridAdapter(Context context, List<Photo> photos) {
@@ -65,20 +160,30 @@ public class PhotosActivity extends AppCompatActivity {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
 
+            if(position == LOAD_LIMIT*identifer) {
+
+                loadMoreContent();
+                identifer++;
+            }
+
+
+            Log.i("item-position",String.valueOf(position));
 
             ImageView imageView;
             if (convertView == null) {
 
-                imageView = new ImageView(context);
-                imageView.setLayoutParams(new GridView.LayoutParams(500,500));
-                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-               // imageView.setPadding(8, 8, 8, 8);
-
-                imageView.setImageBitmap(this.getItem(position).getSource());
-                //albumPhoto.setImageBitmap(BitmapFactory.decodeResource(getResources(),R.drawable.spinner));
+                 imageView = new ImageView(context);
+                 imageView.setLayoutParams(new GridView.LayoutParams(500,500));
+                 imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                 imageView.setPadding(8, 8, 8, 8);
             } else {
                 imageView = (ImageView) convertView;
             }
+            Glide.with(getApplicationContext())
+                    .load(getImageById(getItem(position).getId()))
+                    .into(imageView);
+
+
 
             return imageView;
         }
@@ -95,6 +200,8 @@ public class PhotosActivity extends AppCompatActivity {
             return 0;
         }
     }
+
+
 
     private class PhotosIdsFetcher extends AsyncTask<String, Object, List<Photo>> {
         @Override
@@ -116,30 +223,24 @@ public class PhotosActivity extends AppCompatActivity {
                 JSONObject jsonObject = new JSONObject(JsonResponse);
                 JSONArray fetchedPhotosIds = jsonObject.getJSONArray("data");
 
-                class BitmapDecodingRunnable implements Runnable {
-                    private Photo photo;
+                JSONObject paging = jsonObject.getJSONObject("paging");
 
-                    private BitmapDecodingRunnable(Photo photo) {
-                        this.photo = photo;
-                    }
+                after = jsonObject.getJSONObject("paging").getJSONObject("cursors").getString("after");
 
-                    @Override
-                    public void run() {
-                        try {
-                            Bitmap decodedImage = new PhotoFetcher().execute(photo.getId()).get();
-                            photo.setSource(decodedImage);
-                        } catch (InterruptedException | ExecutionException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
+                Log.i("next",after);
+
+                ;
+
                 for (int i = 0; i < fetchedPhotosIds.length(); i++) {
                     JSONObject item = fetchedPhotosIds.getJSONObject(i);
                     Photo photo = new Photo(item.getString("id"));
-                    runOnUiThread(new BitmapDecodingRunnable(photo));
+
                     Log.i("photo",photo.toString());
                     photosList.add(photo);
                 }
+
+
+
             } catch (IOException | JSONException e) {
                 e.printStackTrace();
             }
@@ -150,7 +251,7 @@ public class PhotosActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(List<Photo> list) {
             super.onPostExecute(list);
-            photosGrid.setAdapter(new PhotosGridAdapter(getApplicationContext(),photosList));
+            adapter.notifyDataSetChanged();
             progress.dismiss();
         }
 

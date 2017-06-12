@@ -7,5 +7,6 @@
     <string name="album_item_name">Album Name</string>
     <string name="album_item_count_photos">count</string>
     <string name="album_item_imageview_content_description">description of the album photo</string>
+    <string name="album_item_privacy">privacy</string>
 
 </resources>

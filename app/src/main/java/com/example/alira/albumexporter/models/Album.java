@@ -13,7 +13,7 @@ public class Album {
     private String cover_photo_id;
     private Bitmap cover_photo;
     private String countWrapper;
-
+    private String privacy;
 
     public Album(String id)
     {
@@ -68,6 +68,13 @@ public class Album {
         this.cover_photo_id = cover_photo_id;
     }
 
+    public String getPrivacy() {
+        return privacy;
+    }
+
+    public void setPrivacy(String privacy) {
+        this.privacy = privacy;
+    }
 
     @Override
     public String toString() {
