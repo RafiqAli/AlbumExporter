@@ -4,18 +4,30 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.BaseAdapter;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestFutureTarget;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.example.alira.albumexporter.models.Album;
 import com.example.alira.albumexporter.models.Photo;
 import com.facebook.AccessToken;
@@ -42,9 +54,8 @@ public class PhotosActivity extends AppCompatActivity {
     List<Photo> photosList = new ArrayList<>();
     ProgressDialog progress;
     GridView photosGrid;
-    String after;
     PhotosGridAdapter adapter = new PhotosGridAdapter(this,photosList);
-    String album_id;
+    PagingHandler pagingHandler = null;
 
 
     @Override
@@ -63,17 +74,17 @@ public class PhotosActivity extends AppCompatActivity {
         photosGrid.setAdapter(adapter);
 
         Intent intent = getIntent();
-        album_id   = intent.getExtras().getString("album_id");
+        String album_id   = intent.getExtras().getString("album_id");
         String album_name = intent.getExtras().getString("album_name");
+        int album_count = intent.getExtras().getInt("album_count");
 
-        Log.i("album-id-null",album_id);
+        pagingHandler = new PagingHandler(album_id,album_count);
 
         setTitle(album_name);
 
         new PhotosIdsFetcher().execute(album_id);
 
     }
-
 
 
     public String getImageById(String photo_id)
@@ -91,101 +102,179 @@ public class PhotosActivity extends AppCompatActivity {
         return Url;
     }
 
+    private class PagingHandler
+    {
+        private int limit = 25; // default
+        private int count;
+        private int remaining_packages = 0;
+        private String after;
+        private String album_id;
+
+
+        public  PagingHandler(String album_id,int count)
+        {
+            this.album_id = album_id;
+            this.count = count;
+            remaining_packages = count/limit;
+        }
+
+        public PagingHandler(String album_id,int count,int limit)
+        {
+            this.album_id = album_id;
+            this.count = count;
+            this.limit = limit;
+        }
+
+
+        public String deliverNextLoadCursor()
+        {
+            //remaining_packages--;
+
+            return after;
+        }
+
+        public void setNextLoadCursor(String nextLoadCursor)
+        {
+            this.after = nextLoadCursor;
+        }
+
+        public boolean hasMore()
+        {
+            if(remaining_packages > 0) return true;
+
+            else return false;
+        };
+
+        public int getLimit() {
+            return limit;
+        }
+
+        public int getCount() {
+            return count;
+        }
+
+        public String getAlbum_id() {
+            return album_id;
+        }
+    }
+
     public void loadMoreContent()
     {
+        if(pagingHandler.hasMore())
+        {
+            Bundle params = new Bundle();
+            params.putInt("limit",pagingHandler.getLimit());
+            params.putString("after",pagingHandler.deliverNextLoadCursor());
+            String path = pagingHandler.getAlbum_id()+"/photos";
+            Log.i("path-loadmore",path);
 
-        Bundle params = new Bundle();
+            new GraphRequest(
+                    AccessToken.getCurrentAccessToken(),
+                    path,
+                    params,
+                    HttpMethod.GET,
+                    new GraphRequest.Callback() {
+                        @Override
+                        public void onCompleted(GraphResponse response) {
+                            JSONObject jsonObject = response.getJSONObject();
+                            Log.i("response",response.getJSONObject().toString());
+                            try {
+                                pagingHandler.setNextLoadCursor(jsonObject.getJSONObject("paging").getJSONObject("cursors").getString("after"));
 
-        params.putInt("limit",25);
-        params.putString("after",after);
+                                Log.i("paginHandler",pagingHandler.deliverNextLoadCursor());
 
-        String path = album_id+"/photos";
-
-        Log.i("path-loadmore",path);
-
-        new GraphRequest(
-                AccessToken.getCurrentAccessToken(),
-                path,
-                params,
-                HttpMethod.GET,
-                new GraphRequest.Callback() {
-                    @Override
-                    public void onCompleted(GraphResponse response) {
-
-                        JSONObject jsonObject = response.getJSONObject();
-                        Log.i("response",response.getJSONObject().toString());
-
-                        try {
-
-                            after = jsonObject.getJSONObject("paging").getJSONObject("cursors").getString("after");
-
-                            ;
-
-                            JSONArray fetchedPhotosIds = jsonObject.getJSONArray("data");
-
-                            for (int i = 0; i < fetchedPhotosIds.length(); i++) {
-                                JSONObject item = fetchedPhotosIds.getJSONObject(i);
-                                Photo photo = new Photo(item.getString("id"));
-                                photosList.add(photo);
-
-                                Log.i("after-photo",photo.toString());
-
-                            }
-
-                            adapter.notifyDataSetChanged();
-
+                                JSONArray fetchedPhotosIds = jsonObject.getJSONArray("data");
+                                for (int i = 0; i < fetchedPhotosIds.length(); i++) {
+                                    JSONObject item = fetchedPhotosIds.getJSONObject(i);
+                                    Photo photo = new Photo(item.getString("id"));
+                                    photosList.add(photo);
+                                    Log.i("after-photo",photo.toString());
+                                }
+                                adapter.notifyDataSetChanged();
                             } catch (JSONException e) {
                                 e.printStackTrace();
-
-                            if(response.getError() != null) Log.i("error-graph",response.getError().toString());
+                                if(response.getError() != null) Log.i("error-graph",response.getError().toString());
+                            }
                         }
 
                     }
-
-                }
-        ).executeAsync();
+            ).executeAsync();
+        }
 
     }
 
     private class PhotosGridAdapter extends BaseAdapter {
         private Context context;
-        private final int LOAD_LIMIT = 25;
+        private final int CLOSE_TO_END_COEFFICIENT = 20;
         private  int identifer = 0;
+        private LayoutInflater inflater;
 
         private List<Photo> photos;
         PhotosGridAdapter(Context context, List<Photo> photos) {
             this.context = context;
             this.photos = photos;
         }
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
 
-            if(position == LOAD_LIMIT*identifer) {
 
-                loadMoreContent();
+        private boolean closeToEnd(int position)
+        {
+            if(position == CLOSE_TO_END_COEFFICIENT*identifer) {
                 identifer++;
+                return  true;
             }
+            else return false;
+        }
 
+        @Override
+        public View getView(final int position, View convertView, ViewGroup parent) {
 
-            Log.i("item-position",String.valueOf(position));
+            if(closeToEnd(position)) loadMoreContent();
 
-            ImageView imageView;
-            if (convertView == null) {
+            inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            View gridView;
 
-                 imageView = new ImageView(context);
-                 imageView.setLayoutParams(new GridView.LayoutParams(500,500));
-                 imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                 imageView.setPadding(8, 8, 8, 8);
-            } else {
-                imageView = (ImageView) convertView;
-            }
+            gridView = inflater.inflate(R.layout.photo_item,parent,false);
+
+            ImageView photoView = (ImageView) gridView.findViewById(R.id.photo_item_imageview);
+            final ProgressBar progressBar = (ProgressBar) gridView.findViewById(R.id.photo_item_progress_bar);
+            final CheckBox checkBox = (CheckBox) gridView.findViewById(R.id.photo_item_checkbox);
+
+            checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+
+                    //TODO: add items to list and then display it when user clicks on the desired actionbar
+                }
+            });
+
+            photoView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    checkBox.setChecked(!checkBox.isChecked());
+                }
+            });
+
+            checkBox.setVisibility(View.VISIBLE);
+
             Glide.with(getApplicationContext())
                     .load(getImageById(getItem(position).getId()))
-                    .into(imageView);
+                    .listener(new RequestListener<Drawable>() {
+                        @Override
+                        public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                            progressBar.setVisibility(View.GONE);
+                            return false;
+                        }
+
+                        @Override
+                        public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                            progressBar.setVisibility(View.GONE);
+                            return false;
+                        }
+                    })
+                    .into(photoView);
 
 
-
-            return imageView;
+            return gridView;
         }
         @Override
         public int getCount() {
@@ -223,13 +312,7 @@ public class PhotosActivity extends AppCompatActivity {
                 JSONObject jsonObject = new JSONObject(JsonResponse);
                 JSONArray fetchedPhotosIds = jsonObject.getJSONArray("data");
 
-                JSONObject paging = jsonObject.getJSONObject("paging");
-
-                after = jsonObject.getJSONObject("paging").getJSONObject("cursors").getString("after");
-
-                Log.i("next",after);
-
-                ;
+                pagingHandler.setNextLoadCursor(jsonObject.getJSONObject("paging").getJSONObject("cursors").getString("after"));
 
                 for (int i = 0; i < fetchedPhotosIds.length(); i++) {
                     JSONObject item = fetchedPhotosIds.getJSONObject(i);
@@ -240,19 +323,17 @@ public class PhotosActivity extends AppCompatActivity {
                 }
 
 
-
             } catch (IOException | JSONException e) {
                 e.printStackTrace();
             }
             return photosList;
         }
 
-
         @Override
         protected void onPostExecute(List<Photo> list) {
             super.onPostExecute(list);
             adapter.notifyDataSetChanged();
-            progress.dismiss();
+           progress.dismiss();
         }
 
     }

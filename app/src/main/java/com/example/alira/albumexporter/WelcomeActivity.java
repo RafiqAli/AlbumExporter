@@ -5,7 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,9 +19,14 @@ import android.widget.BaseAdapter;
 import android.widget.GridView;
 
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.example.alira.albumexporter.models.Album;
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
@@ -39,6 +46,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -60,9 +68,9 @@ public class WelcomeActivity extends AppCompatActivity {
 
         progress = new ProgressDialog(this);
         progress.setTitle("Loading");
-        progress.setMessage("Wait while loading...");
+        progress.setMessage("Wait while fetching albums...");
         progress.setCancelable(false); // disable dismiss by tapping outside of the dialog
-       // progress.show();
+        progress.show();
 
 
         albumsGrid = (GridView) this.findViewById(R.id.welcome_grid);
@@ -72,10 +80,14 @@ public class WelcomeActivity extends AppCompatActivity {
         albumsGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                Log.i("clicklistener","ok");
+
                 Album album = albumsList.get(position);
                 Intent intent = new Intent(getApplicationContext(), PhotosActivity.class);
                 intent.putExtra("album_id", album.getId());
                 intent.putExtra("album_name", album.getName());
+                intent.putExtra("album_count",album.getCount());
                 startActivity(intent);
             }
         });
@@ -112,7 +124,11 @@ public class WelcomeActivity extends AppCompatActivity {
                                 albumsList.add(album);
                             }
 
+                            Collections.sort(albumsList);
+
                             albumsGrid.setAdapter(new AlbumGridAdapter(getApplicationContext(),albumsList));
+
+                            progress.dismiss();
 
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -124,6 +140,7 @@ public class WelcomeActivity extends AppCompatActivity {
 
                 }
         ).executeAsync();
+
 
 
     }
@@ -256,24 +273,34 @@ public class WelcomeActivity extends AppCompatActivity {
             inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             View gridView;
 
-            if (convertView == null) {
                 gridView = inflater.inflate(R.layout.album_item,parent,false);
                 ImageView albumPhoto = (ImageView) gridView.findViewById(R.id.album_item_imageview);
                 TextView albumName = (TextView) gridView.findViewById(R.id.album_item_name);
                 TextView albumCount = (TextView) gridView.findViewById(R.id.album_item_count);
+                final ProgressBar progressBar = (ProgressBar) gridView.findViewById(R.id.album_item_progress_bar);
 
                 Glide.with(getApplicationContext())
                         .load(getImageById(getItem(position).getId()))
-                        .into(albumPhoto)
-                        .onLoadStarted(getDrawable(R.drawable.placeholder));
+                        .listener(new RequestListener<Drawable>() {
+                            @Override
+                            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                                progressBar.setVisibility(View.GONE);
+                                return false;
+                            }
+
+                            @Override
+                            public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                                progressBar.setVisibility(View.GONE);
+                                return false;
+                            }
+                        })
+                        .into(albumPhoto);
+
 
                 albumPhoto.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 albumName.setText(this.getItem(position).getName());
                 albumCount.setText(this.getItem(position).getCountWrapper());
 
-                } else {
-                gridView = convertView;
-            }
             return gridView;
         }
         @Override

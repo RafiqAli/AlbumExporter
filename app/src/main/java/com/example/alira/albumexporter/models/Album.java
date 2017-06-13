@@ -2,10 +2,10 @@ package com.example.alira.albumexporter.models;
 
 
 import android.graphics.Bitmap;
+import android.support.annotation.NonNull;
 
 
-
-public class Album {
+public class Album implements Comparable<Album>{
 
     private String name;
     private String id;
@@ -84,5 +84,11 @@ public class Album {
                 ", count=" + count +
                 ", countWrapper='" + countWrapper + '\'' +
                 '}';
+    }
+
+    @Override
+    public int compareTo(@NonNull Album o) {
+
+        return this.getName().compareTo(o.getName());
     }
 }
