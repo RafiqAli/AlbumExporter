@@ -40,7 +40,7 @@
                 <data android:scheme="@string/fb_login_protocol_scheme" />
             </intent-filter>
         </activity>
-        <activity android:name=".WelcomeActivity" />
+        <activity android:name=".AlbumsActivity" />
         <activity android:name=".PhotosActivity" />
     </application>
 

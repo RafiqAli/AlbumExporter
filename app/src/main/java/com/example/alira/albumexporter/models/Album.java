@@ -1,7 +1,5 @@
 package com.example.alira.albumexporter.models;
 
-
-import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 
 
@@ -9,11 +7,8 @@ public class Album implements Comparable<Album>{
 
     private String name;
     private String id;
-    private int count;
+    private String count;
     private String cover_photo_id;
-    private Bitmap cover_photo;
-    private String countWrapper;
-    private String privacy;
 
     public Album(String id)
     {
@@ -36,28 +31,12 @@ public class Album implements Comparable<Album>{
         this.id = id;
     }
 
-    public int getCount() {
+    public String getCount() {
         return count;
     }
 
-    public void setCount(int count) {
+    public void setCount(String count) {
         this.count = count;
-    }
-
-    public Bitmap getCover_photo() {
-        return cover_photo;
-    }
-
-    public void setCover_photo(Bitmap cover_photo) {
-        this.cover_photo = cover_photo;
-    }
-
-    public String getCountWrapper() {
-        return countWrapper;
-    }
-
-    public void setCountWrapper(String countWrapper) {
-        this.countWrapper = countWrapper;
     }
 
     public String getCover_photo_id() {
@@ -68,21 +47,12 @@ public class Album implements Comparable<Album>{
         this.cover_photo_id = cover_photo_id;
     }
 
-    public String getPrivacy() {
-        return privacy;
-    }
-
-    public void setPrivacy(String privacy) {
-        this.privacy = privacy;
-    }
-
     @Override
     public String toString() {
         return "Album{" +
                 "name='" + name + '\'' +
                 ", id=" + id +
                 ", count=" + count +
-                ", countWrapper='" + countWrapper + '\'' +
                 '}';
     }
 

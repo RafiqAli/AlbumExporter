@@ -1,5 +1,7 @@
 package com.example.alira.albumexporter;
 
+import com.facebook.FacebookSdk;
+
 import org.junit.Test;
 
 import static org.junit.Assert.*;

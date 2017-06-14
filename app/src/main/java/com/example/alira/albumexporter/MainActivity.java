@@ -3,6 +3,7 @@ package com.example.alira.albumexporter;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
@@ -27,18 +28,15 @@ public class MainActivity extends AppCompatActivity {
         loginButton = (LoginButton) findViewById(R.id.login_button);
         loginButton.setReadPermissions("public_profile", "email","user_photos");
 
-        if (Profile.getCurrentProfile() != null) {
-
-            Intent intent = new Intent(getApplicationContext(),WelcomeActivity.class);
-            startActivity(intent);
-        }
 
         // Callback registration
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+
+
             @Override
             public void onSuccess(LoginResult loginResult) {
 
-                Intent intent = new Intent(getApplicationContext(),WelcomeActivity.class);
+                Intent intent = new Intent(getApplicationContext(),AlbumsActivity.class);
                 startActivity(intent);
             }
 
@@ -52,11 +50,26 @@ public class MainActivity extends AppCompatActivity {
                 // App code
             }
         });
+
+
+
+        Profile profile = Profile.getCurrentProfile();
+
+        if (Profile.getCurrentProfile() != null) {
+
+            Intent intent = new Intent(getApplicationContext(),AlbumsActivity.class);
+            startActivity(intent);
+        }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        callbackManager.onActivityResult(requestCode, resultCode, data);
+        //callbackManager.onActivityResult(requestCode, resultCode, data);
+
+        if (callbackManager.onActivityResult(requestCode, resultCode, data)) {
+            return;
+        }
+
     }
 }
