@@ -7,7 +7,6 @@ import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -88,18 +87,31 @@ public class AlbumsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_albums);
 
+        // If the app did not get the profile instance from facebook
+        if (Profile.getCurrentProfile() == null)
+        {
+            Intent intent = new Intent(getApplicationContext(),ErrorActivity.class);
+            intent.putExtra("error","Sorry an internal error has been occured, please try again later.");
+            startActivity(intent);
+        }
+
+        //A loading spinner that lasts until albums metadata are fetched
         progress = new ProgressDialog(this);
         progress.setTitle("Loading");
         progress.setMessage("Wait while fetching albums...");
         progress.setCancelable(false);
         progress.show();
 
-        // (view,adapter,clickListener)-binding the 'albumsGrid' gridView
+
+
         albumsGrid = (GridView) this.findViewById(R.id.welcome_grid);
+        // adapter-binding and clickListener-binding the 'albumsGrid' gridView
         albumsGrid.setAdapter(adapter);
         albumsGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                // when clicked the app will retrieve the id and the name
+                // of the item and pass them to the PhotosActivity intent
                 Album album = albumsList.get(position);
                 Intent intent = new Intent(getApplicationContext(), PhotosActivity.class);
                 intent.putExtra("album_id", album.getId());
@@ -108,9 +120,14 @@ public class AlbumsActivity extends AppCompatActivity {
             }
         });
 
+        // we construct the path and set the parameters as needed
+        // in order to perform the desired request.
         String path = Profile.getCurrentProfile().getId()+"/albums";
         Bundle params = new Bundle();
+        // I assigned the value 2 to the limit attribute because I wanted
+        // to test pagination in albums, and the default limit was 25.
         params.putString("fields","name,count,cover_photo");params.putInt("limit",2);
+        // calling th graph request
         new GraphRequest(AccessToken.getCurrentAccessToken(), path, params, HttpMethod.GET,callback).executeAsync();
     }
 

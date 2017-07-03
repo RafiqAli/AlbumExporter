@@ -23,6 +23,7 @@
             android:layout_height="25dp"
             android:layout_gravity="right"
             android:buttonTint="@color/blue"
+
             />
 
             <ProgressBar
