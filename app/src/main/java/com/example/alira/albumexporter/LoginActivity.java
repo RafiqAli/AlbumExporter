@@ -1,28 +1,17 @@
 package com.example.alira.albumexporter;
 
-import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.TextView;
-
 import com.example.alira.albumexporter.util.Helper;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
-import com.facebook.FacebookSdk;
 import com.facebook.Profile;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 
-import java.net.SocketTimeoutException;
-import java.util.concurrent.TimeoutException;
-
-import static com.example.alira.albumexporter.util.Helper.hasActiveInternetConnection;
-
-public class MainActivity extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity {
 
     CallbackManager callbackManager;
 

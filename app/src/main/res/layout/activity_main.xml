@@ -9,15 +9,20 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.example.alira.albumexporter.MainActivity">
+    tools:context="com.example.alira.albumexporter.LoginActivity">
 
+    <!--
+     Icon below made by : Madebyoliver (www.flaticon.com/authors/madebyoliver)
+     from : flatIcon (http://www.flaticon.com)
+     is licensed by Creative Commons BY 3.0  (creativecommons.org/licenses/by/3.0/)
+    -->
     <ImageView
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:layout_gravity="center"
         android:layout_marginBottom="100dp"
         android:layout_marginTop="50dp"
-        android:src="@drawable/package_export"/>
+        android:src="@drawable/logo"/>
 
     <com.facebook.login.widget.LoginButton
         android:id="@+id/login_button"

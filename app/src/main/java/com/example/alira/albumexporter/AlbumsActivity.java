@@ -1,7 +1,9 @@
 package com.example.alira.albumexporter;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
@@ -79,7 +81,27 @@ public class AlbumsActivity extends AppCompatActivity {
                 // unlocking the variable so the girdadapter
                 // can be free to send async requests
                 locker.unlock();
-            } catch (JSONException e) {e.printStackTrace();}
+            } catch (JSONException e)
+            {
+                e.printStackTrace();
+
+                // if there's a problem in json response, the app will show a dialog with an error message shown below,
+                // and it will return back to previous activity (Albums Activity)
+                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(AlbumsActivity.this);
+                // setting the error message
+                alertDialogBuilder.setMessage("Sorry an error has occured we couldn't fetch your photos, please try again later");
+                alertDialogBuilder.setPositiveButton("OK",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface arg0, int arg1) {
+                                // terminate the current app, which leads us the previous
+                                finish();
+                            }
+                        });
+                // displaying the error dialog
+                alertDialogBuilder.show();
+
+            }
         }
     };
     @Override
